@@ -1,0 +1,735 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Demo Site - Service View</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: system-ui, sans-serif; line-height: 1.6; background: #f8fafc; color: #0f172a; }
+        header { background: #2563eb; color: white; padding: 1rem 2rem; }
+        nav { display: flex; justify-content: space-between; align-items: center; max-width: 1200px; margin: 0 auto; }
+        nav ul { display: flex; list-style: none; gap: 2rem; }
+        nav a { color: white; text-decoration: none; }
+        .btn { background: #2563eb; color: white; padding: 0.75rem 1.5rem; border: none; border-radius: 0.5rem; cursor: pointer; text-decoration: none; }
+
+        .card { background: white; padding: 2rem; border-radius: 0.5rem; box-shadow: 0 1px 3px rgba(0,0,0,0.08); }
+
+        .small { font-size:0.9rem; color:#475569; }
+        .muted { color:#64748b; font-size:0.9rem; }
+
+        /* Service View styles */
+        .service-section { padding: 2.5rem 2rem; max-width: 1200px; margin: 2rem auto; background: #fff; border-radius: 8px; box-shadow: 0 1px 6px rgba(2,6,23,0.04); }
+        .service-header { display:flex; justify-content:space-between; align-items:center; gap:1rem; margin-bottom:1rem; }
+        .service-controls { display:flex; gap:0.75rem; align-items:center; }
+        .service-controls select, .service-controls button { padding:0.5rem; border-radius:6px; border:1px solid #e6edf6; background:#fff; }
+        .service-kpis { display:grid; gap:1rem; grid-template-columns: repeat(auto-fit, minmax(180px,1fr)); margin-top:1rem; }
+        .kpi-tile { background: #f8fafc; padding: 1rem; border-radius: 8px; border: 1px solid #e6eefb; display:flex; flex-direction:column; gap:0.5rem; min-height:88px; }
+        .kpi-tile .title { color:#334155; font-weight:700; }
+        .kpi-tile .val { font-size:1.25rem; font-weight:700; }
+
+        .status-pill { padding: 0.25rem 0.5rem; border-radius: 999px; font-weight:600; font-size:0.85rem; display:inline-block; }
+        .status-green { background:#ecfdf5; color:#065f46; border:1px solid #bbf7d0; }
+        .status-yellow { background:#fffbeb; color:#92400e; border:1px solid #fde68a; }
+        .status-red { background:#fff1f2; color:#9f1239; border:1px solid #fecaca; }
+
+        .drill-table-section { margin-top:1rem; }
+        .drill-filters { display:flex; gap:0.5rem; margin-bottom:0.5rem; }
+
+        .service-actions { display:flex; gap:0.5rem; margin-top:0.75rem; }
+        .note { color:#475569; font-size:0.9rem; margin-top:0.5rem; }
+
+        .icm-list { margin-top:0.5rem; }
+
+        table { width:100%; border-collapse: collapse; background: #fff; border-radius: 0.5rem; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.06); }
+        th, td { text-align:left; padding:0.75rem 1rem; border-bottom:1px solid #eef2f7; }
+        th { background:#f8fafc; color:#334155; font-weight:600; font-size:0.95rem; }
+        tr:last-child td { border-bottom: none; }
+
+        /* Trend chart area - compact tile */
+        .trend-section { margin-top: 1.25rem; display:flex; gap:1rem; align-items:flex-start; flex-wrap:wrap; }
+        .mini-chart-card { width: 320px; height: 120px; padding: 8px; border-radius: 8px; background: #fff; border: 1px solid #e6eefb; display:flex; align-items:center; justify-content:center; }
+        .trend-summary { min-width:220px; background:#f8fafc; border:1px solid #e6eefb; padding:1rem; border-radius:8px; height:120px; display:flex; flex-direction:column; justify-content:center; }
+        .trend-arrow { font-size:1.25rem; margin-right:0.5rem; vertical-align:middle; }
+        canvas#trendChart { width: 300px !important; height: 96px !important; }
+        .chart-small-ticks { font-size: 10px; color: #475569; }
+
+        .section-title { font-size:1rem; font-weight:700; margin-bottom:8px; color:#0f172a; }
+        .action-item { color:#9f1239; font-weight:700; font-size:0.95rem; }
+
+        @media (max-width: 820px) {
+            .service-header { flex-direction: column; align-items: flex-start; gap:8px; }
+            .mini-chart-card { width: 100%; }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <nav>
+            <div class="logo"><strong>PilotFish Resiliency</strong></div>
+            <ul>
+                <li><a href="#service-view">Service View</a></li>
+                <li><a href="#about">About PilotFish Resiliency</a></li>
+                <li><a href="#contact">Contact PFR Team</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <!-- Service View (only content on page) -->
+    <section id="service-view" class="service-section" aria-label="Service View">
+        <div class="service-header">
+            <div>
+                <h2>PF Resiliency Dashboard</h2>
+                <div class="small muted">Select a Machine Function (MF) to view resiliency posture and recovery readiness.</div>
+            </div>
+
+            <div class="service-controls">
+                <label for="serviceSelect" class="small muted">MF:</label>
+                <select id="serviceSelect" aria-label="Select MF"></select>
+                <button id="exportBtn" class="btn" style="background:#10b981;"">Export Report (Excel)</button>
+            </div>
+                        <div style="display:flex; justify-content:space-between; align-items:center; gap:1rem;">
+                
+            </div>
+            <div>
+                    <strong>Program Adoption Rate</strong>
+                    <div class="note">Percent of services onboarded to PFR / participating in drills.</div>
+                </div>
+                <div style="text-align:right;">
+                    <div><strong id="adoption-pfr">—</strong> <span class="muted small">PFR onboard</span></div>
+                    <div><strong id="adoption-drill">—</strong> <span class="muted small">Drill participation</span></div>
+                </div>
+        </div>
+
+        <div class="card">
+
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-top:12px;">
+                <div class="card">
+                    <div class="section-title">Section 1 | Resiliency capability of the MF</div>
+                    <div id="resiliencyCapability" class="service-kpis"></div>
+                </div>
+
+                <div class="card">
+                    <div class="section-title">Section 2 | Recovery capability of the MF</div>
+                    <div id="recoveryCapability" class="service-kpis"></div>
+                </div>
+            </div>
+
+            <div class="drill-table-section">
+                <h3 style="margin-top:1rem;">Past Drill History</h3>
+                <div class="drill-filters">
+                    <div class="muted small">Filter: <select id="filterType"><option value="all">All</option><option value="destructive">Destructive</option><option value="non-destructive">Non-destructive</option></select></div>
+                </div>
+                <div style="overflow:auto;">
+                    <table id="drillTable" aria-label="Drill history">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Environment</th>
+                                <th>Platforms</th>
+                                <th>Scenario</th>
+                                <th>Validation Workflows</th>
+                                <th>Recovery Success</th>
+                                <th>Automated Recovery</th>
+                                <th>TSG / Tooling</th>
+                                <th>RAP WorkflowId</th>
+                                <th>FMS ActionId</th>
+                            </tr>
+                        </thead>
+                        <tbody id="drillBody">
+                            <tr><td colspan="10" class="muted">No drills available</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            <div class="service-kpis" id="serviceKpis">
+                <!-- KPI tiles inserted here -->
+            </div>
+            </div>
+
+            <div style="margin-top:1rem;">
+                <h3>Recent ICMs / Active Repair Items</h3>
+                <div id="icmList" class="icm-list muted small">No ICMs for selected MF</div>
+            </div>
+            <div class="service-actions" style="margin-top:14px;">
+                <button id="btnCreateICM" class="btn" style="background:#f59e0b;">Create ICM</button>
+                <div class="note">During drills: TTD/TTR live streams & ICM streaming are supported via ingestion endpoints.</div>
+            </div>
+                        <div class="trend-section">
+                <div class="mini-chart-card">
+                    <canvas id="trendChart" aria-label="Trend chart"></canvas>
+                </div>
+
+                <div class="trend-summary" id="trendSummary" aria-live="polite">
+                    <div style="display:flex; align-items:center; gap:0.5rem; margin-bottom:6px;">
+                        <span id="trendArrow" class="trend-arrow">→</span>
+                        <div>
+                            <div style="font-weight:700;" id="trendVal">—</div>
+                            <div class="muted small">Change since previous drill</div>
+                        </div>
+                    </div>
+                    <div class="muted small" id="trendNote">Select metric and MF to view trend.</div>
+                    <div style="margin-top:8px;">
+                        <label class="muted small" for="trendMetric">Metric:</label>
+                        <select id="trendMetric" aria-label="Select trend metric" style="padding:6px; border-radius:6px; border:1px solid #e6edf6; margin-left:6px; margin-top:6px; width:100%;">
+                            <option value="RPO_min">RPO (min)</option>
+                            <option value="RTO_hours">RTO (hr)</option>
+                            <option value="TTD_min">TTD (min)</option>
+                            <option value="TTR_min">TTR (min)</option>
+                            <option value="RecoverySuccessPct">Recovery Success (%)</option>
+                            <option value="AvailabilityPct">Availability (%)</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            <div style="margin-top:12px" class="muted small">Refresh cadence: Daily; during active drill windows updates are near real-time (≤15 minutes) via streaming/batch ingestion.</div>
+        </div>
+    </section>
+
+    <footer>
+        <p style="text-align:center; padding:1rem 0;">&copy; 2024 DemoSite. All rights reserved.</p>
+    </footer>
+
+    <!-- Chart.js + SheetJS for Excel export (client-side) -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
+
+    <script>
+        // PF Machine Functions (MF) data including resiliency/recovery properties
+        function offsetDate(daysAgo) {
+            const d = new Date();
+            d.setDate(d.getDate() + daysAgo);
+            return d.toISOString().split('T')[0];
+        }
+
+        const services = [
+            {
+                id: 'SEC',
+                name: 'AP Security',
+                type: 'stateful',
+                stateless: false,
+                datastores: ['Postgres (metadata)', 'Redis (session)'],
+                faultDomains: { 'fd-1': 2, 'fd-2': 1 },
+                onboardingPercent: 90,
+                participationPercent: 75,
+                metrics: { RPO_min: 10, RTO_hours: 1.5, TTD_min: 3, TTR_min: 60, RecoverySuccessPct: 98, AvailabilityPct: 99.9 },
+                workflowId: 'RAP-ABCD-1234',
+                actionId: 'FMS-AUTH-1001',
+                drillHistory: [
+                    { date: offsetDate(-15), env: 'Canary', platforms: 'PFVM', scenario: 'non-destructive', workflows: 'aurora-validate-v1', recoverySuccess: true, automatedRecovery: true, tsg: true, workflowId: 'RAP-ABCD-1234', actionId: 'FMS-AUTH-1001' },
+                    { date: offsetDate(-120), env: 'Stage', platforms: 'PF baremetal', scenario: 'destructive', workflows: 'aurora-restore', recoverySuccess: true, automatedRecovery: false, tsg: true, workflowId: 'RAP-OLD-999', actionId: 'FMS-AUTH-900' }
+                ],
+                icms: [{ id: 'ICM-1001', title: 'Fix auto-recovery script', status: 'Active', created: offsetDate(-10) }],
+                tsgs: { network: true, storage: true, database: true, application: true },
+                recovery: { available: true, type: 'automated' }
+            },
+            {
+                id: 'DM',
+                name: 'Device manager',
+                type: 'stateless',
+                stateless: true,
+                datastores: [],
+                faultDomains: { 'fd-1': 3 }, // not spread
+                onboardingPercent: 80,
+                participationPercent: 25,
+                metrics: { RTO_hours: 0.25 },
+                workflowId: 'RAP-CACHE-555',
+                actionId: 'FMS-CACHE-201',
+                drillHistory: [
+                    { date: offsetDate(-400), env: 'ZZZ', platforms: 'PFVM', scenario: 'non-destructive', workflows: 'aurora-lite', recoverySuccess: false, automatedRecovery: false, tsg: false, workflowId: 'RAP-OLD-555', actionId: 'FMS-CACHE-201' }
+                ],
+                icms: [],
+                tsgs: { network: true, storage: false, database: false, application: false },
+                recovery: { available: false, type: null }
+            },
+            {
+                id: 'PFVM',
+                name: 'PilotFish VM',
+                type: 'stateful',
+                stateless: false,
+                datastores: ['Cassandra (profiles)'],
+                faultDomains: { 'fd-1': 1, 'fd-2': 1, 'fd-3': 1 },
+                onboardingPercent: 95,
+                participationPercent: 90,
+                metrics: { RPO_min: 5, RTO_hours: 0.5, TTD_min: 2, TTR_min: 30, RecoverySuccessPct: 99, AvailabilityPct: 99.99 },
+                workflowId: 'RAP-API-321',
+                actionId: 'FMS-API-555',
+                drillHistory: [
+                    { date: offsetDate(-60), env: 'Silverstone', platforms: 'EAPVM', scenario: 'non-destructive', workflows: 'aurora-heavy', recoverySuccess: true, automatedRecovery: false, tsg: true, workflowId: 'RAP-API-321', actionId: 'FMS-API-555' }
+                ],
+                icms: [{ id: 'ICM-3000', title: 'Instrument TTD metrics', status: 'Closed', created: offsetDate(-40) }],
+                tsgs: { network: true, storage: true, database: true, application: false },
+                recovery: { available: true, type: 'manual' }
+            }
+        ];
+
+        const targets = {
+            RPO_min: 15,
+            RTO_hours: 4,
+            TTD_min: 5,
+            RecoverySuccessPct: 95,
+            AvailabilityPct: 99.9
+        };
+
+        // UI references
+        const serviceSelect = document.getElementById('serviceSelect');
+        const adoptionPFR = document.getElementById('adoption-pfr');
+        const adoptionDrill = document.getElementById('adoption-drill');
+
+        // populate MF dropdown
+        function populateMFs() {
+            serviceSelect.innerHTML = '';
+            services.forEach(s => {
+                const opt = document.createElement('option');
+                opt.value = s.id;
+                opt.textContent = s.name + ' (' + s.id + ')';
+                serviceSelect.appendChild(opt);
+            });
+        }
+
+        function setAdoption() {
+            const avgOnboard = Math.round(services.reduce((a,b)=>a+b.onboardingPercent,0)/services.length);
+            const avgParticipation = Math.round(services.reduce((a,b)=>a+b.participationPercent,0)/services.length);
+            adoptionPFR.textContent = avgOnboard + '%';
+            adoptionDrill.textContent = avgParticipation + '%';
+        }
+
+        function colourForLowerIsBetter(value, target) {
+            if (value === null || value === undefined) return 'status-red';
+            if (value <= target) return 'status-green';
+            if (value <= target * 1.2) return 'status-yellow';
+            return 'status-red';
+        }
+        function colourForHigherIsBetter(value, target) {
+            if (value === null || value === undefined) return 'status-red';
+            if (value >= target) return 'status-green';
+            if (value >= target * 0.8) return 'status-yellow';
+            return 'status-red';
+        }
+
+        function formatValue(metric, value) {
+            if (value === null || value === undefined) return '—';
+            switch(metric) {
+                case 'RPO_min': return value + ' min';
+                case 'RTO_hours': return value + ' hr';
+                case 'TTD_min': return value + ' min';
+                case 'TTR_min': return value + ' min';
+                case 'RecoverySuccessPct': return value + '%';
+                case 'AvailabilityPct': return value + '%';
+                default: return value;
+            }
+        }
+
+        // trend chart setup
+        let trendChart = null;
+
+        function buildDrillMetricPoints(svc, metricKey, filterScenario='all') {
+            const drills = (svc.drillHistory || []).filter(d => filterScenario === 'all' ? true : d.scenario === filterScenario);
+            const baseline = svc.metrics[metricKey];
+            const points = drills.map((d, idx) => {
+                const seed = [...d.date].reduce((a,c)=>a + c.charCodeAt(0), idx);
+                const variance = ((seed % 21) - 10) / 100;
+                let value;
+                if (baseline !== undefined && baseline !== null) {
+                    value = Number((baseline * (1 + variance)).toFixed(2));
+                } else {
+                    if (metricKey === 'RTO_hours') value = +(Math.random() * 3 + 0.2).toFixed(2);
+                    else if (metricKey === 'RPO_min') value = Math.round(Math.random()*20 + 1);
+                    else if (metricKey === 'TTD_min') value = Math.round(Math.random()*10 + 1);
+                    else if (metricKey === 'TTR_min') value = Math.round(Math.random()*120 + 10);
+                    else if (metricKey === 'RecoverySuccessPct') value = Math.round(Math.random()*10 + 90);
+                    else if (metricKey === 'AvailabilityPct') value = +(99 + Math.random() * 0.99).toFixed(3);
+                }
+                return { date: d.date, value };
+            });
+            points.sort((a,b) => new Date(a.date) - new Date(b.date));
+            return points;
+        }
+
+        function renderTrendChart(svc, metricKey) {
+            const filter = document.getElementById('filterType').value || 'all';
+            const points = buildDrillMetricPoints(svc, metricKey, filter);
+            const labels = points.map(p => p.date);
+            const data = points.map(p => p.value);
+
+            const arrowEl = document.getElementById('trendArrow');
+            const valEl = document.getElementById('trendVal');
+            const noteEl = document.getElementById('trendNote');
+
+            if (data.length === 0) {
+                if (trendChart) { trendChart.destroy(); trendChart = null; }
+                arrowEl.textContent = '→';
+                valEl.textContent = '—';
+                noteEl.textContent = 'No drill points for selected metric/filter.';
+                return;
+            }
+
+            const last = data[data.length - 1];
+            const prev = data.length >= 2 ? data[data.length - 2] : null;
+            let changePct = null;
+            let arrow = '→';
+            if (prev !== null && prev !== 0) {
+                changePct = ((last - prev) / Math.abs(prev)) * 100;
+                if (Math.abs(changePct) < 0.5) arrow = '→';
+                else arrow = changePct > 0 ? '▲' : '▼';
+            }
+            arrowEl.textContent = arrow;
+            valEl.textContent = (typeof last === 'number') ? (String(last) + (metricKey.includes('Pct') ? '%' : (metricKey === 'RTO_hours' ? ' hr' : metricKey.includes('_min') ? ' min' : ''))) : last;
+            noteEl.textContent = (changePct === null) ? 'Only one drill point available' : ('Change vs previous: ' + changePct.toFixed(1) + '%');
+
+            const ctx = document.getElementById('trendChart').getContext('2d');
+            const labelFriendly = {
+                RPO_min: 'RPO (min)',
+                RTO_hours: 'RTO (hr)',
+                TTD_min: 'TTD (min)',
+                TTR_min: 'TTR (min)',
+                RecoverySuccessPct: 'Recovery Success (%)',
+                AvailabilityPct: 'Availability (%)'
+            }[metricKey] || metricKey;
+
+            const cfg = {
+                type: 'line',
+                data: {
+                    labels,
+                    datasets: [{
+                        label: labelFriendly,
+                        data,
+                        fill: false,
+                        borderColor: '#2563eb',
+                        backgroundColor: '#2563eb',
+                        tension: 0.2,
+                        pointRadius: 3,
+                        pointHoverRadius: 5,
+                        borderWidth: 2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    plugins: { legend: { display: false }, tooltip: { mode: 'index', intersect: false, bodyFont: {size:11}, titleFont: {size:12} } },
+                    scales: { x: { display: true, ticks: { font: {size:10} } }, y: { display: true, ticks: { font: {size:10} } } },
+                    layout: { padding: 4 }
+                }
+            };
+
+            if (trendChart) {
+                trendChart.data.labels = labels;
+                trendChart.data.datasets[0].data = data;
+                trendChart.options = cfg.options;
+                trendChart.update();
+            } else {
+                trendChart = new Chart(ctx, cfg);
+            }
+        }
+
+        // Utils
+        function isWithinLastNDays(dateStr, n) {
+            if (!dateStr) return false;
+            const d = new Date(dateStr);
+            const cutoff = Date.now() - (n * 24 * 60 * 60 * 1000);
+            return d.getTime() >= cutoff;
+        }
+
+        // Render KPIs, resiliency and recovery sections for a selected MF
+        function showService(svcId) {
+            const svc = services.find(s=>s.id === svcId);
+            if (!svc) return;
+            const container = document.getElementById('serviceKpis');
+            container.innerHTML = '';
+
+            const coreMetrics = [
+                { key: 'RPO_min', title: 'RPO', target: targets.RPO_min, lowerIsBetter: true },
+                { key: 'RTO_hours', title: 'RTO', target: targets.RTO_hours, lowerIsBetter: true },
+                { key: 'TTD_min', title: 'TTD', target: targets.TTD_min, lowerIsBetter: true },
+                { key: 'RecoverySuccessPct', title: 'Recovery Success', target: targets.RecoverySuccessPct, lowerIsBetter: false },
+                { key: 'AvailabilityPct', title: 'Availability', target: targets.AvailabilityPct, lowerIsBetter: false }
+            ];
+
+            coreMetrics.forEach(m => {
+                if (svc.stateless && m.key !== 'RTO_hours') return;
+                const val = svc.metrics[m.key];
+                let stateClass = 'status-red';
+                if (m.target !== null) {
+                    if (m.lowerIsBetter) stateClass = colourForLowerIsBetter(val, m.target);
+                    else stateClass = colourForHigherIsBetter(val, m.target);
+                } else {
+                    if (val !== undefined && val !== null) {
+                        stateClass = val <= 120 ? 'status-green' : (val <= 120*1.2 ? 'status-yellow' : 'status-red');
+                    }
+                }
+                const tile = document.createElement('div');
+                tile.className = 'kpi-tile';
+                tile.innerHTML = '<div class="title">' + m.title + '</div>' +
+                    '<div class="val">' + (val !== undefined ? formatValue(m.key, val) : 'self-reported') + '</div>' +
+                    '<div><span class="status-pill ' + stateClass + '">' + (stateClass === 'status-green' ? 'Good' : stateClass === 'status-yellow' ? 'Warning' : 'Fail') + '</span>' +
+                    (m.target !== null ? ' <span class="muted small">Target: ' + formatValue(m.key, m.target) + '</span>' : '') + '</div>';
+                container.appendChild(tile);
+            });
+
+            // Add drill cadence + recover tiles
+            const cadence = drillCadenceStatus(svc.drillHistory);
+            const cadenceTile = document.createElement('div');
+            cadenceTile.className = 'kpi-tile';
+            cadenceTile.innerHTML = '<div class="title">Drill Cadence (3mo)</div><div class="val"><span class="status-pill ' + (cadence.state === 'green' ? 'status-green' : cadence.state === 'yellow' ? 'status-yellow' : 'status-red') + '">' + cadence.note + '</span></div>';
+            container.appendChild(cadenceTile);
+            
+            const nd = recoverStatus(svc.drillHistory, 'non-destructive');
+            const d = recoverStatus(svc.drillHistory, 'destructive');
+            const ndTile = document.createElement('div');
+            ndTile.className = 'kpi-tile';
+            ndTile.innerHTML = '<div class="title">Auto-recover (Availability loss)</div><div class="val"><span class="status-pill ' + (nd.state === 'green' ? 'status-green' : nd.state === 'yellow' ? 'status-yellow' : 'status-red') + '">' + nd.state.toUpperCase() + '</span></div><div class="muted small">' + nd.note + '</div>';
+            const dTile = document.createElement('div');
+            dTile.className = 'kpi-tile';
+            dTile.innerHTML = '<div class="title">Recover (Service loss)</div><div class="val"><span class="status-pill ' + (d.state === 'green' ? 'status-green' : d.state === 'yellow' ? 'status-yellow' : 'status-red') + '">' + d.state.toUpperCase() + '</span></div><div class="muted small">' + d.note + '</div>';
+            container.appendChild(ndTile);
+            container.appendChild(dTile);
+
+            // Resiliency capability details
+            renderResiliencyCapability(svc);
+            // Recovery capability details
+            renderRecoveryCapability(svc);
+
+            // populate drill table
+            const filter = document.getElementById('filterType').value || 'all';
+            const rows = (svc.drillHistory || []).filter(r => filter === 'all' ? true : r.scenario === filter);
+            const tbody = document.getElementById('drillBody');
+            tbody.innerHTML = '';
+            if (rows.length === 0) {
+                const tr = document.createElement('tr');
+                tr.innerHTML = '<td colspan="10" class="muted">No drills available</td>';
+                tbody.appendChild(tr);
+            } else {
+                rows.sort((a,b)=> new Date(b.date)-new Date(a.date));
+                rows.forEach(r => {
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = '<td>' + r.date + '</td>' +
+                        '<td>' + r.env + '</td>' +
+                        '<td>' + r.platforms + '</td>' +
+                        '<td>' + r.scenario + '</td>' +
+                        '<td>' + r.workflows + '</td>' +
+                        '<td>' + (r.recoverySuccess ? 'Yes' : 'No') + '</td>' +
+                        '<td>' + (r.automatedRecovery ? 'Yes' : 'No') + '</td>' +
+                        '<td>' + (r.tsg ? 'Yes' : 'No') + '</td>' +
+                        '<td>' + (r.workflowId || svc.workflowId || '—') + '</td>' +
+                        '<td>' + (r.actionId || svc.actionId || '—') + '</td>';
+                    tbody.appendChild(tr);
+                });
+            }
+
+            const icmList = document.getElementById('icmList');
+            if (svc.icms && svc.icms.length) {
+                icmList.innerHTML = '';
+                svc.icms.forEach(i => {
+                    const d = document.createElement('div');
+                    d.innerHTML = '<strong>' + i.id + '</strong> — ' + i.title + ' <span class="muted small">(' + i.status + ')</span>';
+                    icmList.appendChild(d);
+                });
+            } else {
+                icmList.textContent = 'No ICMs for selected MF';
+            }
+
+            // Update the trend chart (use selected metric)
+            const metricKey = document.getElementById('trendMetric').value || 'RPO_min';
+            renderTrendChart(svc, metricKey);
+
+            currentService = svc;
+        }
+
+        // Resiliency capability rendering
+        function renderResiliencyCapability(svc) {
+            const container = document.getElementById('resiliencyCapability');
+            container.innerHTML = '';
+
+            // Stateful / Stateless tile
+            const stateTile = document.createElement('div');
+            stateTile.className = 'kpi-tile';
+            if (svc.stateless) {
+                stateTile.innerHTML = '<div class="title">Service Type</div><div class="val">Stateless</div><div class="muted small">This MF uses stateless services; no metadata store required.</div>';
+            } else {
+                stateTile.innerHTML = '<div class="title">Service Type</div><div class="val">Stateful</div><div class="muted small">Data stores: ' + (svc.datastores && svc.datastores.length ? svc.datastores.join(', ') : 'Not declared') + '</div>';
+            }
+            container.appendChild(stateTile);
+
+            // Fault domain distribution
+            const fdTile = document.createElement('div');
+            fdTile.className = 'kpi-tile';
+            const domains = svc.faultDomains || {};
+            const domainKeys = Object.keys(domains);
+            if (domainKeys.length > 1) {
+                let html = '<div class="title">Fault Domain Distribution</div><div class="val"><span class="status-pill status-green">Yes</span></div><div class="muted small">';
+                html += 'Nodes per FD: ' + domainKeys.map(k => k + ': ' + domains[k]).join(', ');
+                html += '</div>';
+                fdTile.innerHTML = html;
+            } else {
+                let html = '<div class="title">Fault Domain Distribution</div><div class="val"><span class="status-pill status-red">No</span></div><div class="muted small action-item">Action: Spread nodes across multiple fault domains</div>';
+                fdTile.innerHTML = html;
+            }
+            container.appendChild(fdTile);
+             // Fault domain action (summary tile)
+            const fdSummary = document.createElement('div');
+            fdSummary.className = 'kpi-tile';
+            const keys = Object.keys(svc.faultDomains || {});
+            fdSummary.innerHTML = '<div class="title">Nodes / Fault Domains</div><div class="val">' + (keys.length ? keys.length + ' domains' : 'Unknown') + '</div><div class="muted small">' + (keys.length ? 'Nodes: ' + keys.map(k=>k+':'+svc.faultDomains[k]).join(', ') : 'No domain info') + '</div>';
+            container.appendChild(fdSummary);
+
+            // Drill in last quarter (destructive or non-destructive)
+            const drillTile = document.createElement('div');
+            drillTile.className = 'kpi-tile';
+            const last90 = (svc.drillHistory || []).filter(d => isWithinLastNDays(d.date, 90));
+            const destructive = last90.filter(d=>d.scenario==='destructive');
+            const nondestructive = last90.filter(d=>d.scenario==='non-destructive');
+            if (destructive.length || nondestructive.length) {
+                const recent = (last90.sort((a,b)=> new Date(b.date)-new Date(a.date))[0]);
+                const icms = (svc.icms || []).map(i => i.id + ' (' + i.status + ')').join('; ') || 'No ICMs';
+                drillTile.innerHTML = '<div class="title">Drills (last 90d)</div><div class="val"><span class="status-pill status-green">Yes</span></div><div class="muted small">Most recent: ' + recent.workflows + ' (' + recent.scenario + ' on ' + recent.date + ')<br/>ICMs: ' + icms + '</div>';
+            } else {
+                drillTile.innerHTML = '<div class="title">Drills (last 90d)</div><div class="val"><span class="status-pill status-red">No</span></div><div class="muted small action-item">Action: Schedule a destructive/non-destructive drill using RAP & FIS; capture ICMs</div>';
+            }
+            container.appendChild(drillTile);
+        }
+
+        // Recovery capability rendering
+        function renderRecoveryCapability(svc) {
+            const container = document.getElementById('recoveryCapability');
+            container.innerHTML = '';
+
+            // TSG availability tile (fault types)
+            const faultTypes = ['network','storage','database','application'];
+            const missing = faultTypes.filter(t => !(svc.tsgs && svc.tsgs[t]));
+            const tsgTile = document.createElement('div');
+            tsgTile.className = 'kpi-tile';
+            if (missing.length === 0) {
+                tsgTile.innerHTML = '<div class="title">TSG Availability</div><div class="val"><span class="status-pill status-green">All Ready</span></div><div class="muted small">TSGs available for all fault categories.</div>';
+            } else {
+                tsgTile.innerHTML = '<div class="title">TSG Availability</div><div class="val"><span class="status-pill status-red">Missing</span></div><div class="muted small action-item">Missing TSGs: ' + missing.join(', ') + '</div>';
+            }
+            container.appendChild(tsgTile);
+
+            // Automated/manual recovery tile
+            const recTile = document.createElement('div');
+            recTile.className = 'kpi-tile';
+            if (svc.recovery && svc.recovery.available) {
+                recTile.innerHTML = '<div class="title">Recovery Solution</div><div class="val">' + svc.recovery.type.toUpperCase() + '</div><div class="muted small">Type: ' + svc.recovery.type + (svc.recovery.type === 'automated' ? ' — automation pipelines configured' : '') + '</div>';
+            } else {
+                recTile.innerHTML = '<div class="title">Recovery Solution</div><div class="val"><span class="status-pill status-red">Not available</span></div><div class="muted small action-item">Action: Implement manual or automated recovery workflows for this MF</div>';
+            }
+            container.appendChild(recTile);
+
+             // Backup Solution tile (for stateful services)
+                if (!svc.stateless) {
+                    const backupTile = document.createElement('div');
+                    backupTile.className = 'kpi-tile';
+                    if (svc.backup && svc.backup.available) {
+                        backupTile.innerHTML = '<div class="title">Backup Solution</div><div class="val"><span class="status-pill status-green">Available</span></div><div class="muted small">Backup type: ' + (svc.backup.type || 'Unknown') + '</div>';
+                    } else {
+                        backupTile.innerHTML = '<div class="title">Backup Solution</div><div class="val"><span class="status-pill status-red">Not available</span></div><div class="muted small action-item">Action: Implement backup solution for this MF</div>';
+                    }
+                    container.appendChild(backupTile);
+                }
+        }
+
+        // Existing helper functions reused
+        function drillCadenceStatus(drillHistory) {
+            if (!drillHistory || drillHistory.length === 0) return { state: 'red', note: 'No drills recorded' };
+            const lastDate = new Date(drillHistory.map(d=>d.date).sort().reverse()[0]);
+            const ageDays = (Date.now() - lastDate.getTime()) / (1000*60*60*24);
+            if (ageDays <= 90) return { state: 'green', note: 'Drill within last 3 months' };
+            return { state: 'yellow', note: 'Drilled, but older than 3 months' };
+        }
+
+        function recoverStatus(drillHistory, scenarioType) {
+            const relevant = (drillHistory || []).filter(d => d.scenario === scenarioType);
+            if (relevant.length === 0) return { state: 'red', note: 'No ' + scenarioType + ' drills' };
+            const anySuccess = relevant.some(r => r.recoverySuccess === true);
+            const anyAuto = relevant.some(r => r.automatedRecovery === true);
+            if (anySuccess && anyAuto) return { state: 'green', note: 'Can auto-recover' };
+            if (anySuccess && !anyAuto) return { state: 'yellow', note: 'Recovery possible; automation planned' };
+            return { state: 'red', note: 'Unable to recover' };
+        }
+
+        // Executions & ICM UI handlers (unchanged behavior)
+        function exportReport(svc) {
+            if (!svc) return alert('Select a service first');
+            const wb = XLSX.utils.book_new();
+
+            const metricsRows = [
+                ['Service Id', svc.id],
+                ['Service Name', svc.name],
+                ['WorkflowId', svc.workflowId],
+                ['FMS ActionId', svc.actionId],
+                ['Export Timestamp', new Date().toISOString()],
+                ['Audit Note', 'Exported as read-only report for audit. (Client-side demo)'],
+                [],
+                ['Metric', 'Value', 'Target', 'Notes']
+            ];
+            const coreKeys = ['RPO_min','RTO_hours','TTD_min','TTR_min','RecoverySuccessPct','AvailabilityPct'];
+            coreKeys.forEach(k => {
+                const val = svc.metrics[k] !== undefined ? svc.metrics[k] : (svc.stateless && k !== 'RTO_hours' ? 'N/A (stateless)' : 'self-reported / no data');
+                const target = (targets[k] !== undefined) ? targets[k] : '';
+                metricsRows.push([k, val, target, '']);
+            });
+            const wsMetrics = XLSX.utils.aoa_to_sheet(metricsRows);
+            wsMetrics['!protect'] = { password: "" };
+            XLSX.utils.book_append_sheet(wb, wsMetrics, 'Metrics');
+
+            const dh = [['Date','Environment','Platforms','Scenario','Validation Workflows','Recovery Success','Automated Recovery','TSG/Tooling','RAP WorkflowId','FMS ActionId']];
+            (svc.drillHistory || []).forEach(r => {
+                dh.push([r.date, r.env, r.platforms, r.scenario, r.workflows, r.recoverySuccess ? 'Yes' : 'No', r.automatedRecovery ? 'Yes' : 'No', r.tsg ? 'Yes' : 'No', r.workflowId || svc.workflowId, r.actionId || svc.actionId]);
+            });
+            const wsDrills = XLSX.utils.aoa_to_sheet(dh);
+            XLSX.utils.book_append_sheet(wb, wsDrills, 'DrillHistory');
+
+            const icmSheet = [['ICM Id','Title','Status','Created']];
+            (svc.icms || []).forEach(i => icmSheet.push([i.id, i.title, i.status, i.created || '']));
+            XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(icmSheet), 'ICMs');
+
+            const audit = [
+                ['Audit Metadata'],
+                ['ExportedBy', 'DemoSite Client'],
+                ['ExportTimestamp', new Date().toISOString()],
+                ['ImmutableNote', 'This client-export is a read-only snapshot. For cryptographically immutable audit, sign and store on server-side or push to immutable storage.'],
+                ['Traceability', 'Each drill row preserves RAP WorkflowId and FMS ActionId for traceability']
+            ];
+            XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(audit), 'Audit');
+
+            const fname = svc.name + '-resiliency-report-' + new Date().toISOString().split('T')[0] + '.xlsx';
+            XLSX.writeFile(wb, fname);
+        }
+
+        // UI wiring
+        populateMFs();
+        setAdoption();
+
+        let currentService = services[0];
+        serviceSelect.value = currentService.id;
+        document.getElementById('trendMetric').value = 'RPO_min';
+        showService(currentService.id);
+
+        serviceSelect.addEventListener('change', e => showService(e.target.value));
+        document.getElementById('filterType').addEventListener('change', () => showService(serviceSelect.value));
+        document.getElementById('trendMetric').addEventListener('change', () => {
+            if (currentService) renderTrendChart(currentService, document.getElementById('trendMetric').value);
+        });
+
+        document.getElementById('btnShowICMs').addEventListener('click', () => {
+            alert('Recent ICMs (sample):\n' + (currentService.icms.length ? currentService.icms.map(i=>i.id + ': ' + i.title).join('\n') : 'No ICMs'));
+        });
+
+        document.getElementById('btnCreateICM').addEventListener('click', () => {
+            const title = prompt('Enter short ICM title for ' + currentService.name);
+            if (!title) return alert('ICM creation cancelled');
+            const newId = 'ICM-' + Math.floor(Math.random()*9000 + 1000);
+            currentService.icms.push({ id: newId, title, status: 'Active', created: offsetDate(0) });
+            alert('Created ICM ' + newId + ' (demo). It will appear in the Recent ICMs list.');
+            showService(currentService.id);
+        });
+
+        document.getElementById('createAdo').addEventListener('click', () => {
+            const adoUrl = 'https://dev.azure.com/ORG/PROJECT/_workitems/create/Bug';
+            window.open(adoUrl, '_blank');
+        });
+
+        document.getElementById('exportBtn').addEventListener('click', () => exportReport(currentService));
+    </script>
+</body>
+</html>
+```
