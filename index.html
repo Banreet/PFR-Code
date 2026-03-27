@@ -87,6 +87,35 @@
         </nav>
     </header>
 
+    <!-- Fleet / Portfolio View -->
+    <section id="fleet-view" class="card" style="max-width:1200px; margin:1.25rem auto;">
+        <div style="display:flex;justify-content:space-between;align-items:center;">
+            <div>
+                <h2 style="margin-bottom:4px;">PilotFish Resiliency Maturity</h2>
+                <div class="muted small">Portfolio view of PFR Maturity Scores (0–4). Sorted by risk (highest first).</div>
+            </div>
+            <div style="text-align:right;">
+                <div class="muted small">Last refresh: <span id="fleetLastRef">—</span></div>
+                <button id="refreshFleetBtn" class="btn" style="margin-left:8px;background:#2563eb;">Refresh</button>
+            </div>
+        </div>
+        <div style="margin-top:10px; overflow:auto;">
+            <table id="fleetTable" style="min-width:720px;">
+                <thead>
+                    <tr>
+                        <th style="width:240px">Service</th>
+                        <th>Total (0–4)</th>
+                        <th>Assess</th>
+                        <th>Validate</th>
+                        <th>Recovery</th>
+                        <th>Last Updated</th>
+                    </tr>
+                </thead>
+                <tbody id="fleetBody"></tbody>
+            </table>
+        </div>
+    </section>
+
     <!-- Service View (only content on page) -->
     <section id="service-view" class="service-section" aria-label="Service View">
         <div class="service-header">
@@ -797,8 +826,39 @@
             setText('pfrOverallScore', s.overall.toFixed(2));
         }
 
-        // Existing helper functions reused
-        function drillCadenceStatus(drillHistory) {
+            // Fleet/Portfolio view renderer
+            function renderFleetView() {
+                var rows = services.map(function(svc) {
+                    var sc = computePfrScores(svc);
+                    var assess = Number(sc.kpi1.score) + Number(sc.kpi2_1.score) + Number(sc.kpi2_2.score);
+                    var validate = Number(sc.kpi3_1.score) + Number(sc.kpi3_2.score);
+                    var recovery = Number(sc.kpi4.score);
+                    return { svc: svc, sc: sc, assess: assess, validate: validate, recovery: recovery, overall: Number(sc.overall) };
+                });
+                rows.sort(function(a,b){ return a.overall - b.overall; }); // lowest score first
+                var tbody = document.getElementById('fleetBody');
+                if (!tbody) return;
+                tbody.innerHTML = '';
+                var now = new Date();
+                var nowLabel = now.toLocaleString();
+                var lastRefEl = document.getElementById('fleetLastRef');
+                if (lastRefEl) lastRefEl.textContent = nowLabel;
+                rows.forEach(function(r) {
+                    var tr = document.createElement('tr');
+                    tr.style.cursor = 'pointer';
+                    tr.innerHTML = '<td><a href="#" class="fleet-link" data-id="' + r.svc.id + '">' + (r.svc.name + ' (' + r.svc.id + ')') + '</a></td>' +
+                        '<td>' + r.overall.toFixed(2) + '</td>' +
+                        '<td>' + r.assess.toFixed(2) + '</td>' +
+                        '<td>' + r.validate.toFixed(2) + '</td>' +
+                        '<td>' + r.recovery.toFixed(2) + '</td>' +
+                        '<td>' + nowLabel + '</td>';
+                    tbody.appendChild(tr);
+                    tr.addEventListener('click', function(e){ e.preventDefault(); serviceSelect.value = r.svc.id; showService(r.svc.id); document.getElementById('service-view').scrollIntoView({behavior: 'smooth'}); });
+                });
+            }
+
+            // Existing helper functions reused
+            function drillCadenceStatus(drillHistory) {
             if (!drillHistory || drillHistory.length === 0) return { state: 'red', note: 'No drills recorded' };
             const lastDate = new Date(drillHistory.map(d=>d.date).sort().reverse()[0]);
             const ageDays = (Date.now() - lastDate.getTime()) / (1000*60*60*24);
@@ -873,12 +933,18 @@
         serviceSelect.value = currentService.id;
         document.getElementById('trendMetric').value = 'RPO_min';
         showService(currentService.id);
+        // render fleet / portfolio table
+        renderFleetView();
 
         serviceSelect.addEventListener('change', e => showService(e.target.value));
         document.getElementById('filterType').addEventListener('change', () => showService(serviceSelect.value));
         document.getElementById('trendMetric').addEventListener('change', () => {
             if (currentService) renderTrendChart(currentService, document.getElementById('trendMetric').value);
         });
+
+        // Fleet refresh button
+        var refreshBtn = document.getElementById('refreshFleetBtn');
+        if (refreshBtn) refreshBtn.addEventListener('click', function(){ renderFleetView(); });
 
         document.getElementById('btnShowICMs').addEventListener('click', () => {
             alert('Recent ICMs (sample):\n' + (currentService.icms.length ? currentService.icms.map(i=>i.id + ': ' + i.title).join('\n') : 'No ICMs'));
@@ -891,6 +957,8 @@
             currentService.icms.push({ id: newId, title, status: 'Active', created: offsetDate(0) });
             alert('Created ICM ' + newId + ' (demo). It will appear in the Recent ICMs list.');
             showService(currentService.id);
+            // update fleet table after data change
+            renderFleetView();
         });
 
         document.getElementById('createAdo').addEventListener('click', () => {
