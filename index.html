@@ -61,6 +61,18 @@
             .service-header { flex-direction: column; align-items: flex-start; gap:8px; }
             .mini-chart-card { width: 100%; }
         }
+        /* PFR Maturity dashboard styles (compact, progress bars) */
+        .pfr-journey { display:flex; gap:12px; margin-top:12px; align-items:flex-start; flex-wrap:wrap; }
+        .pfr-stage { flex:1; min-width:200px; background:#fff; border:1px solid #e6eefb; padding:10px; border-radius:8px; }
+        .pfr-kpi-row { display:flex; gap:8px; align-items:center; justify-content:space-between; padding:4px 0; border-bottom:1px dashed #f1f5f9; font-size:0.95rem; }
+        .pfr-kpi-row:last-child { border-bottom:none; }
+        .pfr-kpi-name { font-weight:600; color:#0f172a; }
+        .pfr-kpi-small { font-size:0.82rem; color:#64748b; margin-left:8px; }
+        .pfr-score { font-weight:700; color:#0f172a; margin-left:8px; min-width:64px; text-align:right; }
+        .pfr-overall { display:flex; justify-content:space-between; align-items:center; padding-top:8px; border-top:1px solid #eef2f7; font-size:1rem; }
+        .pfr-progress { width:100%; height:8px; background:#f1f5f9; border-radius:999px; overflow:hidden; margin-top:6px; box-shadow: inset 0 1px 0 rgba(255,255,255,0.6); }
+        .pfr-progress-fill { height:100%; width:0%; background: linear-gradient(90deg,#10b981,#2563eb); transition: width 600ms ease; border-radius:999px 0 0 999px; }
+        .pfr-stage .section-sub { font-size:0.88rem; color:#475569; margin-top:8px; }
     </style>
 </head>
 <body>
@@ -113,6 +125,52 @@
                     <div class="section-title">Section 2 | Recovery capability of the MF</div>
                     <div id="recoveryCapability" class="service-kpis"></div>
                 </div>
+            </div>
+
+            <!-- PFR Maturity Dashboard (compact) -->
+            <div id="pfrMaturitySection" class="card" style="margin-top:12px;">
+                <div class="section-title">PFR Maturity</div>
+                <div class="muted small">Quantified maturity score — read-only</div>
+
+                <div class="pfr-journey" aria-hidden="false">
+                    <div class="pfr-stage">
+                        <div style="font-weight:700;">Stage 1: Document <span class="muted small">#Assess</span></div>
+                        <div class="pfr-kpi-row"><div class="pfr-kpi-name">KPI-1: Resiliency Documentation</div><div class="pfr-score"><span id="kpi1-score">0.00</span>/1</div></div>
+                        <div class="pfr-progress" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" title="KPI-1 progress"><div class="pfr-progress-fill" id="kpi1-bar"></div></div>
+                        <div class="section-sub">Completion: <span id="kpi1-pct">—%</span> · Subtotal: <span id="stage1-subtotal">0.00/1</span></div>
+                    </div>
+
+                    <div class="pfr-stage">
+                        <div style="font-weight:700;">Stage 2: Enable Fault Library <span class="muted small">#Assess</span></div>
+                        <div class="pfr-kpi-row"><div class="pfr-kpi-name">KPI-2.1: Fault & TSG Coverage</div><div class="pfr-score"><span id="kpi2-1-score">0.00</span>/0.5</div></div>
+                        <div class="pfr-progress" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" title="KPI-2.1 progress"><div class="pfr-progress-fill" id="kpi2-1-bar"></div></div>
+                        <div class="pfr-kpi-row"><div class="pfr-kpi-name">KPI-2.2: FIS Automation</div><div class="pfr-score"><span id="kpi2-2-score">0.00</span>/0.5</div></div>
+                        <div class="pfr-progress" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" title="KPI-2.2 progress"><div class="pfr-progress-fill" id="kpi2-2-bar"></div></div>
+                        <div class="section-sub">Stage subtotal: <span id="stage2-subtotal">0.00/1</span></div>
+                    </div>
+
+                    <div class="pfr-stage">
+                        <div style="font-weight:700;">Stage 3: Confirm / Validate <span class="muted small">#Validate</span></div>
+                        <div class="pfr-kpi-row"><div class="pfr-kpi-name">KPI-3.1: Test Execution</div><div class="pfr-score"><span id="kpi3-1-score">0.00</span>/0.5</div></div>
+                        <div class="pfr-progress" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" title="KPI-3.1 progress"><div class="pfr-progress-fill" id="kpi3-1-bar"></div></div>
+                        <div class="pfr-kpi-row"><div class="pfr-kpi-name">KPI-3.2: FIS-Enabled Tests</div><div class="pfr-score"><span id="kpi3-2-score">0.00</span>/0.5</div></div>
+                        <div class="pfr-progress" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" title="KPI-3.2 progress"><div class="pfr-progress-fill" id="kpi3-2-bar"></div></div>
+                        <div class="section-sub">Stage subtotal: <span id="stage3-subtotal">0.00/1</span></div>
+                    </div>
+
+                    <div class="pfr-stage">
+                        <div style="font-weight:700;">Stage 4: Improve <span class="muted small">#Prevent</span></div>
+                        <div class="pfr-kpi-row"><div class="pfr-kpi-name">KPI-4: Investment Completion</div><div class="pfr-score"><span id="kpi4-score">0.00</span>/1</div></div>
+                        <div class="pfr-progress" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" title="KPI-4 progress"><div class="pfr-progress-fill" id="kpi4-bar"></div></div>
+                        <div class="section-sub">Stage subtotal: <span id="stage4-subtotal">0.00/1</span></div>
+                    </div>
+                </div>
+
+                <div class="pfr-overall" style="margin-top:10px;">
+                    <div><strong>Overall PFR Score</strong></div>
+                    <div class="pfr-total"><span id="pfrOverallScore">0.00</span> / 4.0</div>
+                </div>
+                <div class="muted small" style="margin-top:8px;">Read-only — data-backed (questionnaire, FIS, tests, investments).</div>
             </div>
 
             <div class="drill-table-section">
@@ -488,6 +546,9 @@
             // Recovery capability details
             renderRecoveryCapability(svc);
 
+            // PFR maturity dashboard
+            renderPfrMaturity(svc);
+
             // populate drill table
             const filter = document.getElementById('filterType').value || 'all';
             const rows = (svc.drillHistory || []).filter(r => filter === 'all' ? true : r.scenario === filter);
@@ -625,6 +686,115 @@
                     }
                     container.appendChild(backupTile);
                 }
+        }
+
+        // PFR maturity scoring model and renderer
+        function computePfrScores(svc) {
+            // KPI-1: questionnaire completion %
+            var qPct = null;
+            if (typeof svc.questionnairePct === 'number') qPct = svc.questionnairePct;
+            else {
+                var fields = ['tsgs','datastores','faultDomains','recovery','metrics'];
+                var present = 0;
+                fields.forEach(function(k) {
+                    var v = svc[k];
+                    if (v === undefined || v === null) return;
+                    if (Array.isArray(v)) { if (v.length) present++; return; }
+                    if (typeof v === 'object') { if (Object.keys(v).length) present++; return; }
+                    present++;
+                });
+                qPct = Math.round((present / fields.length) * 100);
+            }
+            qPct = Math.max(0, Math.min(100, qPct));
+            var kpi1Score = (qPct / 100) * 1;
+
+            // KPI-2.1: fault scenarios & TSG coverage
+            var totalScenarios = (typeof svc.faultScenariosTotal === 'number' && svc.faultScenariosTotal > 0) ? svc.faultScenariosTotal : 4;
+            var tsgsObj = svc.tsgs || {};
+            var tsgCovered = Object.keys(tsgsObj).length ? Object.keys(tsgsObj).filter(function(k){ return !!tsgsObj[k]; }).length : 0;
+            var pct2_1 = Math.round((tsgCovered / totalScenarios) * 100);
+            pct2_1 = Math.max(0, Math.min(100, pct2_1));
+            var kpi2_1Score = (pct2_1 / 100) * 0.5;
+
+            // KPI-2.2 FIS automation coverage
+            var fisPct = (typeof svc.fisAutomationPct === 'number') ? svc.fisAutomationPct : null;
+            if (fisPct === null) {
+                var drills = svc.drillHistory || [];
+                var automated = drills.filter(function(d){ return !!d.automatedRecovery; }).length;
+                var denom = drills.length || totalScenarios || 1;
+                fisPct = Math.round((automated / denom) * 100);
+            }
+            fisPct = Math.max(0, Math.min(100, fisPct));
+            var kpi2_2Score = (fisPct / 100) * 0.5;
+
+            // KPI-3.1 Test execution coverage
+            var testTotal = (typeof svc.testScenariosTotal === 'number' && svc.testScenariosTotal > 0) ? svc.testScenariosTotal : 10;
+            var testExecuted = (typeof svc.testScenariosExecuted === 'number') ? svc.testScenariosExecuted : (svc.drillHistory ? svc.drillHistory.length : 0);
+            var pct3_1 = Math.round((Math.min(testExecuted, testTotal) / testTotal) * 100);
+            var kpi3_1Score = (pct3_1 / 100) * 0.5;
+
+            // KPI-3.2 FIS-enabled test coverage
+            var fisTestsExecuted = (typeof svc.fisTestsExecuted === 'number') ? svc.fisTestsExecuted : (svc.drillHistory ? svc.drillHistory.filter(function(d){ return !!d.automatedRecovery; }).length : 0);
+            var pct3_2 = Math.round((Math.min(fisTestsExecuted, testTotal) / testTotal) * 100);
+            var kpi3_2Score = (pct3_2 / 100) * 0.5;
+
+            // KPI-4 Resiliency investment completion
+            var investmentsTotal = (typeof svc.investmentsTotal === 'number') ? svc.investmentsTotal : (svc.icms ? svc.icms.length : 0);
+            var investmentsComplete = (typeof svc.investmentsCompleted === 'number') ? svc.investmentsCompleted : (svc.icms ? svc.icms.filter(function(i){ return i.status && i.status.toLowerCase() === 'closed'; }).length : 0);
+            var pct4 = investmentsTotal ? Math.round((investmentsComplete / investmentsTotal) * 100) : 0;
+            var kpi4Score = (pct4 / 100) * 1;
+
+            var overall = +(kpi1Score + kpi2_1Score + kpi2_2Score + kpi3_1Score + kpi3_2Score + kpi4Score).toFixed(2);
+
+            return {
+                kpi1: { pct: qPct, score: +kpi1Score.toFixed(2), max: 1 },
+                kpi2_1: { pct: pct2_1, score: +kpi2_1Score.toFixed(2), max: 0.5 },
+                kpi2_2: { pct: fisPct, score: +kpi2_2Score.toFixed(2), max: 0.5 },
+                kpi3_1: { pct: pct3_1, score: +kpi3_1Score.toFixed(2), max: 0.5 },
+                kpi3_2: { pct: pct3_2, score: +kpi3_2Score.toFixed(2), max: 0.5 },
+                kpi4: { pct: pct4, score: +kpi4Score.toFixed(2), max: 1 },
+                overall: overall
+            };
+        }
+
+        function renderPfrMaturity(svc) {
+            var s = computePfrScores(svc);
+            if (!document.getElementById('pfrOverallScore')) return;
+            var setText = function(id, text){ var el = document.getElementById(id); if (el) el.textContent = text; };
+
+            setText('kpi1-pct', s.kpi1.pct + '%');
+            setText('kpi1-score', s.kpi1.score);
+            setText('kpi2-1-pct', s.kpi2_1.pct + '%');
+            setText('kpi2-1-score', s.kpi2_1.score);
+            setText('kpi2-2-pct', s.kpi2_2.pct + '%');
+            setText('kpi2-2-score', s.kpi2_2.score);
+            setText('kpi3-1-pct', s.kpi3_1.pct + '%');
+            setText('kpi3-1-score', s.kpi3_1.score);
+            setText('kpi3-2-pct', s.kpi3_2.pct + '%');
+            setText('kpi3-2-score', s.kpi3_2.score);
+            setText('kpi4-pct', s.kpi4.pct + '%');
+            setText('kpi4-score', s.kpi4.score);
+
+            // set progress bar widths and aria-valuenow
+            var setBar = function(barId, pct){ var b = document.getElementById(barId); if (!b) return; b.style.width = (pct || 0) + '%'; var parent = b.parentElement; if (parent && parent.setAttribute) parent.setAttribute('aria-valuenow', pct || 0); };
+            setBar('kpi1-bar', s.kpi1.pct);
+            setBar('kpi2-1-bar', s.kpi2_1.pct);
+            setBar('kpi2-2-bar', s.kpi2_2.pct);
+            setBar('kpi3-1-bar', s.kpi3_1.pct);
+            setBar('kpi3-2-bar', s.kpi3_2.pct);
+            setBar('kpi4-bar', s.kpi4.pct);
+
+            var stage1 = Number(s.kpi1.score);
+            var stage2 = Number(s.kpi2_1.score) + Number(s.kpi2_2.score);
+            var stage3 = Number(s.kpi3_1.score) + Number(s.kpi3_2.score);
+            var stage4 = Number(s.kpi4.score);
+
+            setText('stage1-subtotal', stage1.toFixed(2) + '/1');
+            setText('stage2-subtotal', stage2.toFixed(2) + '/1');
+            setText('stage3-subtotal', stage3.toFixed(2) + '/1');
+            setText('stage4-subtotal', stage4.toFixed(2) + '/1');
+
+            setText('pfrOverallScore', s.overall.toFixed(2));
         }
 
         // Existing helper functions reused
